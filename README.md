@@ -20,6 +20,6 @@ I/O mapping is as follows:
 
 I use [Vasm](http://www.compilers.de/vasm.html) oldstyle to assemble this project.
 
-Currently, given that the SIO needs a lot of initialisation instructions, the binary is around 300
-bytes long. I'm willing to accept any kind of space optimisations anybody can come up with. I
-haven't tried too much yet and I tried keeping it 1:1 without weird branch dependencies.
+Currently, ZMon is 253 bytes in size _without I/O initialisation_. The additional size to initialise
+the CTC and SIO are 45 bytes. I'm willing to accept any kind of space optimisations to also fit in
+I/O initialisation in the 256 byte limit so it's self-contained in 256 bytes.

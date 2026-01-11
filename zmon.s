@@ -29,8 +29,7 @@ CTC1 = 0xE1
 
                   ld sp, 0xFFFF                 ; sp = 0xFFFF
                   di                            ; no interrupts
-                  call init_ctc                 ; init baudrate
-                  call init_sio                 ; init uart
+                  call init_io                  ; init baudrate and sio
 
 ; runtime entrypoint to Wozmon
 
@@ -45,7 +44,7 @@ not_return:       cp 0x08                       ; is backspace?
                   jp p, next_char               ; next char only if no overflow
 
 escape:           ld a, "\\"
-                  call echo                     ; print "/"
+                  call echo                     ; print "\"
 
 newline:          ld a, 0x0D
                   call echo                     ; print newline
@@ -157,34 +156,6 @@ xam_next:         ld b, 0                       ; mode = 0 (xam)
                   jr z, praddr                  ; yes, also print address
                   jr prdata                     ; no, only print data
 
-init_ctc:
-                  ld a, 0b01010101
-                  out (CTC1), a                 ; counter mode, rising edge
-                  ld a, 12
-                  out (CTC1), a                 ; 1843200 / 12 = 153600
-                  ret
-
-init_sio:
-                  ld a, 0b00011000
-                  out (SIOCB), a                ; reset
-                  ld a, 4
-                  out (SIOCB), a                ; reg 4
-                  ld a, 0b01000100
-                  out (SIOCB), a                ; 16x, 1 stop bit, no parity
-                  ld a, 3
-                  out (SIOCB), a                ; reg 3
-                  ld a, 0b11000001
-                  out (SIOCB), a                ; 8 bits, rx enable
-                  ld a, 5
-                  out (SIOCB), a                ; reg 5
-                  ld a, 0b01101000
-                  out (SIOCB), a                ; 8 bits, tx enable
-                  ld a, 1
-                  out (SIOCB), a                ; reg 1
-                  ld a, 0b00000000
-                  out (SIOCB), a                ; all int disable
-                  ret
-
 echo_hex_byte:
                   push af                       ; save lower
                   srl a                         ; move upper to lower
@@ -208,4 +179,37 @@ sio_busy:         in a, (SIOCB)                 ; status word
                   bit 2, a                      ; is buffer empty?
                   jr z, sio_busy                ; no, loop
                   pop af
+                  ret
+
+            .org 0x0100
+
+init_io:
+
+; init CTC for baudrate
+
+                  ld a, 0b01010101
+                  out (CTC1), a                 ; counter mode, rising edge
+                  ld a, 12
+                  out (CTC1), a                 ; 1843200 / 12 = 153600
+
+; init SIO for UART communication
+
+                  ld a, 0b00011000
+                  out (SIOCB), a                ; reset
+                  ld a, 4
+                  out (SIOCB), a                ; reg 4
+                  ld a, 0b01000100
+                  out (SIOCB), a                ; 16x, 1 stop bit, no parity
+                  ld a, 3
+                  out (SIOCB), a                ; reg 3
+                  ld a, 0b11000001
+                  out (SIOCB), a                ; 8 bits, rx enable
+                  ld a, 5
+                  out (SIOCB), a                ; reg 5
+                  ld a, 0b01101000
+                  out (SIOCB), a                ; 8 bits, tx enable
+                  ld a, 1
+                  out (SIOCB), a                ; reg 1
+                  ld a, 0b00000000
+                  out (SIOCB), a                ; all int disable
                   ret
